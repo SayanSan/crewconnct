@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../repositories/mock_repository.dart';
+import '../repositories/base_repository.dart';
+import 'repository_provider.dart';
 
 /// Holds the authentication and user state
 class AuthState {
@@ -33,14 +35,19 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState());
+  final IAuthRepository _repository;
+
+  AuthNotifier(this._repository) : super(const AuthState());
 
   /// Simulate checking auth state on app launch
   Future<void> checkAuthState() async {
     state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(seconds: 2));
-    // Start as unauthenticated; user must log in
-    state = state.copyWith(isLoading: false, isAuthenticated: false);
+    await _repository.checkAuthState();
+    state = state.copyWith(
+      isLoading: false,
+      isAuthenticated: _repository.currentUser != null,
+      user: _repository.currentUser,
+    );
   }
 
   /// Simulate registration
@@ -50,17 +57,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String userType,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.delayed(const Duration(seconds: 1));
-    // In mock mode, always succeed
-    state = state.copyWith(isLoading: false);
-    return true;
+    final success = await _repository.register(
+      email: email,
+      password: password,
+      userType: userType,
+    );
+    state = state.copyWith(
+      isLoading: false,
+      isAuthenticated: success,
+      user: _repository.currentUser,
+    );
+    return success;
   }
 
   /// Simulate OTP verification
   Future<bool> verifyOtp(String otp) async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (otp == '123456') {
+    final success = await _repository.verifyOtp(otp);
+    if (success) {
       state = state.copyWith(isLoading: false);
       return true;
     }
@@ -78,18 +92,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String userType,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.delayed(const Duration(seconds: 1));
-
-    final user = userType == 'student'
-        ? MockRepository.mockStudent
-        : MockRepository.mockManager;
+    final success = await _repository.login(
+      email: email,
+      password: password,
+      userType: userType,
+    );
 
     state = state.copyWith(
       isLoading: false,
-      isAuthenticated: true,
-      user: user,
+      isAuthenticated: success,
+      user: _repository.currentUser,
     );
-    return true;
+    return success;
   }
 
   /// Complete onboarding and update user
@@ -100,9 +114,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  /// Set user type during registration flow
+  /// Set user type during registration flow (Helper for UI)
   void setUserType(String userType) {
-    final user = userType == 'student'
+    // This is still a bit mock-ish for UI flow, but we use the repository's logic if possible
+    final user = userType == 'student' 
         ? MockRepository.mockStudent.copyWith(onboardingComplete: false)
         : MockRepository.mockManager.copyWith(onboardingComplete: false);
     state = state.copyWith(user: user);
@@ -121,5 +136,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 // ── Providers ────────────────────────────────────────────────────────────
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  final repository = ref.watch(authRepositoryProvider);
+  return AuthNotifier(repository);
 });

@@ -56,15 +56,21 @@ class GigState {
 }
 
 class GigNotifier extends StateNotifier<GigState> {
-  GigNotifier() : super(const GigState());
+  final IGigRepository _repository;
+
+  GigNotifier(this._repository) : super(const GigState());
 
   Future<void> loadGigs() async {
     state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    state = state.copyWith(
-      isLoading: false,
-      gigs: MockRepository.mockGigs,
-    );
+    try {
+      final gigs = await _repository.fetchGigs();
+      state = state.copyWith(
+        isLoading: false,
+        gigs: gigs,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   void selectGig(GigModel gig) {
@@ -81,26 +87,35 @@ class GigNotifier extends StateNotifier<GigState> {
 
   Future<bool> createGig(GigModel gig) async {
     state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    state = state.copyWith(
-      isLoading: false,
-      gigs: [...state.gigs, gig],
-    );
-    return true;
+    final success = await _repository.createGig(gig);
+    if (success) {
+      state = state.copyWith(
+        isLoading: false,
+        gigs: [...state.gigs, gig],
+      );
+    } else {
+      state = state.copyWith(isLoading: false, error: 'Failed to create gig');
+    }
+    return success;
   }
 
   Future<bool> publishGig(String gigId) async {
     state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 300));
-    final updated = state.gigs.map((g) {
-      if (g.id == gigId) return g.copyWith(status: 'published');
-      return g;
-    }).toList();
-    state = state.copyWith(isLoading: false, gigs: updated);
-    return true;
+    final success = await _repository.updateGig(gigId, {'status': 'published'});
+    if (success) {
+      final updated = state.gigs.map((g) {
+        if (g.id == gigId) return g.copyWith(status: 'published');
+        return g;
+      }).toList();
+      state = state.copyWith(isLoading: false, gigs: updated);
+    } else {
+      state = state.copyWith(isLoading: false, error: 'Failed to publish gig');
+    }
+    return success;
   }
 }
 
 final gigProvider = StateNotifierProvider<GigNotifier, GigState>((ref) {
-  return GigNotifier();
+  final repository = ref.watch(gigRepositoryProvider);
+  return GigNotifier(repository);
 });

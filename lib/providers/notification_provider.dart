@@ -14,10 +14,12 @@ class NotificationState {
   NotificationState copyWith({
     bool? isLoading,
     List<NotificationModel>? notifications,
+    String? error,
   }) {
     return NotificationState(
       isLoading: isLoading ?? this.isLoading,
       notifications: notifications ?? this.notifications,
+      error: error,
     );
   }
 
@@ -25,28 +27,35 @@ class NotificationState {
 }
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
-  NotificationNotifier() : super(const NotificationState());
+  final INotificationRepository _repository;
 
-  Future<void> loadNotifications(String userId) async {
-    state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(milliseconds: 400));
-    final userNotifs = MockRepository.mockNotifications
-        .where((n) => n.userId == userId)
-        .toList();
-    state = state.copyWith(isLoading: false, notifications: userNotifs);
+  NotificationNotifier(this._repository) : super(const NotificationState());
+
+  Future<void> loadNotifications() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final notifs = await _repository.fetchNotifications();
+      state = state.copyWith(
+        isLoading: false,
+        notifications: notifs,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
-  void markAsRead(String notificationId) {
-    final updated = state.notifications.map((n) {
-      if (n.id == notificationId) return n.copyWith(read: true);
-      return n;
-    }).toList();
-    state = state.copyWith(notifications: updated);
-  }
-
-  void markAllAsRead() {
-    final updated = state.notifications.map((n) => n.copyWith(read: true)).toList();
-    state = state.copyWith(notifications: updated);
+  Future<void> markAsRead(String notificationId) async {
+    state = state.copyWith(error: null);
+    try {
+      await _repository.markAsRead(notificationId);
+      final updated = state.notifications.map((n) {
+        if (n.id == notificationId) return n.copyWith(read: true);
+        return n;
+      }).toList();
+      state = state.copyWith(notifications: updated);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
   }
 }
 

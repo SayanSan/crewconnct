@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/router/app_router.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/gig_provider.dart';
+import '../../../providers/repository_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -108,6 +110,22 @@ class ProfileScreen extends ConsumerWidget {
                 ref.read(authProvider.notifier).logout();
                 context.go(AppRoutes.welcome);
               },
+            ),
+            const SizedBox(height: 32),
+            const Divider(color: AppColors.darkBorder),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Dev: Use Mock Data'),
+              subtitle: const Text('Toggle between Mock and real API'),
+              value: ref.watch(useMockProvider),
+              onChanged: (value) {
+                ref.read(useMockProvider.notifier).state = value;
+                // Reload data when switching
+                if (ref.read(authProvider).isAuthenticated) {
+                    ref.read(gigProvider.notifier).loadGigs();
+                }
+              },
+              activeColor: AppColors.primaryLight,
             ),
           ],
         ),
