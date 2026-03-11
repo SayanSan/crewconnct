@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'base_repository.dart';
-import 'auth_repository.dart';
-import 'gig_repository.dart';
-import 'application_repository.dart';
-import 'notification_repository.dart';
+import '../repositories/base_repository.dart';
+import '../repositories/auth_repository.dart';
+import '../repositories/gig_repository.dart';
+import '../repositories/application_repository.dart';
+import '../repositories/notification_repository.dart';
 
 // Configuration Provider
 final useMockProvider = StateProvider<bool>((ref) => true);

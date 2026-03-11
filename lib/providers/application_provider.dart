@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/application_model.dart';
-import '../repositories/mock_repository.dart';
+import '../repositories/base_repository.dart';
+import 'repository_provider.dart';
 
 class ApplicationState {
   final bool isLoading;

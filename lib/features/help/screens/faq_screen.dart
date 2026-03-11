@@ -12,36 +12,56 @@ class FaqScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('FAQ')),
       body: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         itemCount: faqs.length,
         itemBuilder: (context, index) {
           final faq = faqs[index];
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.darkBorder, width: 0.5),
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
               ),
-              child: ExpansionTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: AppColors.darkSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.darkBorder, width: 0.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                title: Text(faq['question']!,
-                    style: Theme.of(context).textTheme.titleMedium),
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Text(faq['answer']!,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.5)),
+                child: ExpansionTile(
+                  collapsedIconColor: AppColors.darkTextTertiary,
+                  iconColor: AppColors.primaryLight,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  title: Text(
+                    faq['question']!,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                ],
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Text(
+                        faq['answer']!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.darkTextSecondary,
+                              height: 1.6,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

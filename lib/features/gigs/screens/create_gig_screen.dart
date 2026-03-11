@@ -43,7 +43,7 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
     super.dispose();
   }
 
-  Future<void> _create({bool publish = false}) async {
+  void _preview() {
     if (!_formKey.currentState!.validate()) return;
     final user = ref.read(authProvider).user;
     final gig = GigModel(
@@ -56,18 +56,13 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
       pay: double.tryParse(_payController.text) ?? 0,
       requiredSkills: _selectedSkills,
       managerId: user?.id ?? '',
-      organizationName: 'My Organization',
-      status: publish ? 'published' : 'draft',
+      organizationName: user?.organizationName ?? 'My Organization',
+      status: 'draft',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    await ref.read(gigProvider.notifier).createGig(gig);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(publish ? 'Gig published! 🎉' : 'Gig saved as draft')),
-      );
-      context.pop();
-    }
+    
+    context.push('/gigs/preview', extra: gig);
   }
 
   @override
@@ -131,7 +126,7 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
                 leading: const Icon(Icons.calendar_today_rounded),
                 title: const Text('Event Date'),
                 subtitle: Text(
-                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  DateFormat('EEE, MMM d, yyyy').format(_selectedDate),
                 ),
                 onTap: () async {
                   final date = await showDatePicker(
@@ -157,8 +152,11 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
                     selected: selected,
                     onSelected: (val) {
                       setState(() {
-                        if (val) _selectedSkills.add(skill);
-                        else _selectedSkills.remove(skill);
+                        if (val) {
+                          _selectedSkills.add(skill);
+                        } else {
+                          _selectedSkills.remove(skill);
+                        }
                       });
                     },
                     selectedColor: AppColors.primary.withValues(alpha: 0.3),
@@ -166,17 +164,11 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 48),
               CustomButton(
-                label: 'Publish Gig',
-                icon: Icons.publish_rounded,
-                onPressed: () => _create(publish: true),
-              ),
-              const SizedBox(height: 12),
-              CustomButton(
-                label: 'Save as Draft',
-                isOutlined: true,
-                onPressed: () => _create(publish: false),
+                label: 'Preview Gig',
+                icon: Icons.visibility_outlined,
+                onPressed: _preview,
               ),
               const SizedBox(height: 24),
             ],

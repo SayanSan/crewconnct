@@ -1,14 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification_model.dart';
-import '../repositories/mock_repository.dart';
+import '../repositories/base_repository.dart';
+import 'repository_provider.dart';
 
 class NotificationState {
   final bool isLoading;
   final List<NotificationModel> notifications;
+  final String? error;
 
   const NotificationState({
     this.isLoading = false,
     this.notifications = const [],
+    this.error,
   });
 
   NotificationState copyWith({
@@ -31,7 +34,8 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
   NotificationNotifier(this._repository) : super(const NotificationState());
 
-  Future<void> loadNotifications() async {
+  Future<void> loadNotifications([String? userId]) async {
+    // We ignore userId now because the repository handles the current user context
     state = state.copyWith(isLoading: true, error: null);
     try {
       final notifs = await _repository.fetchNotifications();
@@ -57,9 +61,16 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       state = state.copyWith(error: e.toString());
     }
   }
+
+  void markAllAsRead() {
+    // This could also be an API call, but for now we simulate it locally
+    final updated = state.notifications.map((n) => n.copyWith(read: true)).toList();
+    state = state.copyWith(notifications: updated);
+  }
 }
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
-  return NotificationNotifier();
+  final repository = ref.watch(notificationRepositoryProvider);
+  return NotificationNotifier(repository);
 });

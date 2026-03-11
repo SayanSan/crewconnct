@@ -28,6 +28,7 @@ import '../../features/help/screens/help_center_screen.dart';
 import '../../features/help/screens/faq_screen.dart';
 import '../../features/help/screens/support_chat_screen.dart';
 import '../../features/dashboard/screens/main_shell_screen.dart';
+import 'auth_listenable.dart';
 
 // ── Route Names ──────────────────────────────────────────────────────────
 class AppRoutes {
@@ -66,36 +67,47 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 // ── Router Provider ──────────────────────────────────────────────────────
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  // Use read to prevent the provider from being invalidated when the listenable triggers
+  final listenable = ref.read(authListenableProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.welcome, // Start at welcome for dev if not logged in
+    refreshListenable: listenable,
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final isOnSplash = state.matchedLocation == AppRoutes.splash;
+      final authState = ref.read(authProvider);
+      final location = state.matchedLocation;
+      
+      final isOnSplash = location == AppRoutes.splash;
       final isOnAuth = [
         AppRoutes.welcome,
         AppRoutes.login,
         AppRoutes.register,
         AppRoutes.userType,
         AppRoutes.otpVerification,
-      ].contains(state.matchedLocation);
-      final isOnOnboarding = state.matchedLocation.startsWith('/onboarding');
+      ].contains(location);
+      
+      final isOnOnboarding = location.startsWith('/onboarding');
 
-      // Still loading → stay on splash
-      if (authState.isLoading && isOnSplash) return null;
+      // Still loading → stay on current or splash
+      if (authState.isLoading) return null;
 
-      // Not authenticated → send to welcome (unless already on auth screens)
+      // Not authenticated
       if (!authState.isAuthenticated) {
-        if (isOnAuth || isOnSplash || isOnOnboarding) return null;
+        if (isOnAuth || isOnOnboarding) return null;
         return AppRoutes.welcome;
       }
 
       // Authenticated but onboarding not complete
       if (authState.user != null && !authState.user!.onboardingComplete) {
         if (isOnOnboarding) return null;
+        // Don't interrupt auth flow if we are already on register/otp etc. 
+        // (Though usually we are either authenticated or not)
+        if (isOnAuth) return null; 
+
         return authState.user!.isStudent
             ? AppRoutes.studentOnboarding
             : AppRoutes.managerOnboarding;
@@ -198,8 +210,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/gigs/preview',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          // Expect a GigModel via extra
-          return const GigPreviewScreen();
+          final gig = state.extra as GigModel;
+          return GigPreviewScreen(gig: gig);
         },
       ),
       GoRoute(
