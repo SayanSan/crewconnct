@@ -24,7 +24,16 @@ class MockAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<bool> verifyOtp(String otp) async {
+  Future<void> sendOtp(String phoneNumber, {
+    required void Function(String verificationId) onCodeSent,
+    required void Function(String error) onVerificationFailed,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    onCodeSent('mock-verification-id');
+  }
+
+  @override
+  Future<bool> verifyOtp(String otp, {String? verificationId}) async {
     await Future.delayed(const Duration(milliseconds: 800));
     return otp == '123456';
   }
@@ -74,7 +83,16 @@ class ApiAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<bool> verifyOtp(String otp) async {
+  Future<void> sendOtp(String phoneNumber, {
+    required void Function(String verificationId) onCodeSent,
+    required void Function(String error) onVerificationFailed,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    onCodeSent('api-verification-id');
+  }
+
+  @override
+  Future<bool> verifyOtp(String otp, {String? verificationId}) async {
     await Future.delayed(const Duration(milliseconds: 800));
     return otp == '123456';
   }

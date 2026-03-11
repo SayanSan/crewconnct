@@ -20,6 +20,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -28,6 +29,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -36,15 +38,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authProvider.notifier).register(
-          email: _emailController.text,
-          password: _passwordController.text,
-          userType: widget.userType,
-        );
+    // Send OTP via Firebase
+    await ref.read(authProvider.notifier).sendOtp(_phoneController.text);
 
-    if (success && mounted) {
+    if (mounted) {
+      // Navigate to OTP screen
       context.push(AppRoutes.otpVerification, extra: {
-        'email': _emailController.text,
+        'email': _phoneController.text, // Repurposing email param for phone display
         'userType': widget.userType,
       });
     }
@@ -113,6 +113,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
+                  ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    controller: _phoneController,
+                    label: 'Phone Number',
+                    hint: '+1 234 567 8900',
+                    prefixIcon: Icons.phone_android_rounded,
+                    keyboardType: TextInputType.phone,
+                    validator: (v) => v!.isEmpty ? 'Phone number required' : null,
                   ),
                   const SizedBox(height: 20),
                   CustomTextField(

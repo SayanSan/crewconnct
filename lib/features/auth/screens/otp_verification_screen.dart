@@ -71,7 +71,7 @@ class _OtpVerificationScreenState
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Verify Your Email',
+                  'Verify Your Phone',
                   style: Theme.of(context).textTheme.displayMedium,
                 ),
                 const SizedBox(height: 8),
@@ -144,16 +144,17 @@ class _OtpVerificationScreenState
                 Center(
                   child: Column(
                     children: [
-                      Text(
-                        'Use code 123456 for demo',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.darkTextTertiary,
-                            ),
-                      ),
+                      if (authState.verificationId == 'mock-verification-id')
+                        Text(
+                          'Use code 123456 for demo',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.darkTextTertiary,
+                              ),
+                        ),
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
-                          // Resend OTP
+                          ref.read(authProvider.notifier).sendOtp(widget.email);
                         },
                         child: const Text('Resend Code'),
                       ),

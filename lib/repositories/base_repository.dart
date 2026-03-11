@@ -6,7 +6,11 @@ import '../models/notification_model.dart';
 abstract class IAuthRepository {
   Future<void> checkAuthState();
   Future<bool> register({required String email, required String password, required String userType});
-  Future<bool> verifyOtp(String otp);
+  Future<void> sendOtp(String phoneNumber, {
+    required void Function(String verificationId) onCodeSent,
+    required void Function(String error) onVerificationFailed,
+  });
+  Future<bool> verifyOtp(String otp, {String? verificationId});
   Future<bool> login({required String email, required String password, required String userType});
   UserModel? get currentUser;
 }

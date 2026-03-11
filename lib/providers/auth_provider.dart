@@ -10,13 +10,14 @@ class AuthState {
   final bool isLoading;
   final bool isAuthenticated;
   final UserModel? user;
-  final String? error;
+  final String? verificationId;
 
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
     this.user,
     this.error,
+    this.verificationId,
   });
 
   AuthState copyWith({
@@ -24,12 +25,14 @@ class AuthState {
     bool? isAuthenticated,
     UserModel? user,
     String? error,
+    String? verificationId,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       user: user ?? this.user,
       error: error,
+      verificationId: verificationId ?? this.verificationId,
     );
   }
 }
@@ -70,17 +73,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return success;
   }
 
-  /// Simulate OTP verification
+  /// Send OTP to phone number
+  Future<void> sendOtp(String phoneNumber) async {
+    state = state.copyWith(isLoading: true, error: null);
+    await _repository.sendOtp(
+      phoneNumber,
+      onCodeSent: (verificationId) {
+        state = state.copyWith(
+          isLoading: false,
+          verificationId: verificationId,
+        );
+      },
+      onVerificationFailed: (error) {
+        state = state.copyWith(
+          isLoading: false,
+          error: error,
+        );
+      },
+    );
+  }
+
+  /// Verify OTP
   Future<bool> verifyOtp(String otp) async {
     state = state.copyWith(isLoading: true, error: null);
-    final success = await _repository.verifyOtp(otp);
+    final success = await _repository.verifyOtp(
+      otp,
+      verificationId: state.verificationId,
+    );
     if (success) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: _repository.currentUser != null,
+        user: _repository.currentUser,
+      );
       return true;
     }
     state = state.copyWith(
       isLoading: false,
-      error: 'Invalid OTP. Use 123456 for demo.',
+      error: 'Invalid OTP. Please try again.',
     );
     return false;
   }
