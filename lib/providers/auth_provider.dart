@@ -10,6 +10,7 @@ class AuthState {
   final bool isLoading;
   final bool isAuthenticated;
   final UserModel? user;
+  final String? error;
   final String? verificationId;
 
   const AuthState({
@@ -31,7 +32,7 @@ class AuthState {
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       user: user ?? this.user,
-      error: error,
+      error: error ?? this.error,
       verificationId: verificationId ?? this.verificationId,
     );
   }
