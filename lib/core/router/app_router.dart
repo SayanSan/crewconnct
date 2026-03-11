@@ -16,6 +16,7 @@ import '../../features/gigs/screens/gig_list_screen.dart';
 import '../../features/gigs/screens/gig_detail_screen.dart';
 import '../../features/gigs/screens/create_gig_screen.dart';
 import '../../features/gigs/screens/gig_preview_screen.dart';
+import '../../models/gig_model.dart';
 import '../../features/gigs/screens/my_gigs_screen.dart';
 import '../../features/applications/screens/my_applications_screen.dart';
 import '../../features/applications/screens/applicant_list_screen.dart';

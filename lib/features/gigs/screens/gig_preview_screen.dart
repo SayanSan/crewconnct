@@ -148,7 +148,7 @@ class GigPreviewScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             CustomButton(
               label: 'Keep as Draft',
-              isSecondary: true,
+              isOutlined: true,
               onPressed: () async {
                 final success =
                     await ref.read(gigProvider.notifier).createGig(gig);

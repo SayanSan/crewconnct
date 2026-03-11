@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -56,7 +57,7 @@ class _CreateGigScreenState extends ConsumerState<CreateGigScreen> {
       pay: double.tryParse(_payController.text) ?? 0,
       requiredSkills: _selectedSkills,
       managerId: user?.id ?? '',
-      organizationName: user?.organizationName ?? 'My Organization',
+      organizationName: 'My Organization',
       status: 'draft',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
